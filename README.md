@@ -24,7 +24,7 @@ new PDO('pgsql:
 Table will be automatically created if provided with a valid DB connection.
 
 ### Todo:
-- [x] Prevent SQL injections.
+- [x] Prevent SQL injections
 - [ ] DB connection in separate file
 - [ ] Use PHP `include` for cleaner code
 - [ ] Secret file with DB credentials

@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css" />
 
     <title>Breakfast Survey</title>
 
@@ -60,6 +61,7 @@
         }
     }
 ?>
+<a class="github-fork-ribbon left-top" href="https://github.com/rosaqq/breakfast-survey" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
 <div class="section">
     <div class="block has-text-centered">
         <h1 class="title">Breakfast survey!</h1>
