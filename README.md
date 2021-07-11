@@ -29,3 +29,6 @@ Table will be automatically created if provided with a valid DB connection.
 - [ ] Use PHP `include` for cleaner code
 - [ ] Secret file with DB credentials
 - [ ] Comprehensive vulnerability check
+- [ ] More data visualizations
+- [ ] Group similar entries (semantiacally - e.g. bread and butter, bread, bread with butter)
+- [ ] Group similar entries (capitalization - e.g. Cereal, cereal, etc)
