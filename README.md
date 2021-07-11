@@ -8,7 +8,7 @@
 
 PHP based website to collect breakfast information and store it in a PostgreSQL DB.  
 Data visualization with [CanvasJS](https://canvasjs.com/).  
-Frontend is build with [Bulma](https://bulma.io/).
+Frontend built with [Bulma](https://bulma.io/).
 
 ### Database configuration:
 - `index.php` - line 38
@@ -32,3 +32,4 @@ Table will be automatically created if provided with a valid DB connection.
 - [ ] More data visualizations
 - [ ] Group similar entries (semantiacally - e.g. bread and butter, bread, bread with butter)
 - [ ] Group similar entries (capitalization - e.g. Cereal, cereal, etc)
+- [ ] Remove non integer ticks from plot
