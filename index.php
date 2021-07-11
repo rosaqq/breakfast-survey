@@ -61,7 +61,7 @@
         }
     }
 ?>
-<a class="github-fork-ribbon left-top" href="https://github.com/rosaqq/breakfast-survey" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
+<a class="github-fork-ribbon left-top" href="https://github.com/rosaqq/breakfast-survey" data-ribbon="Fork me on GitHub" title="YEET!">Fork me on GitHub</a>
 <div class="section">
     <div class="block has-text-centered">
         <h1 class="title">Breakfast survey!</h1>
