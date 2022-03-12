@@ -1,21 +1,21 @@
 <?php
 // connect to DB
-$pdo = new PDO('pgsql:host=localhost;port=5432;dbname=breakfast;user=postgres;password=postgres');
-// if table 'form' does not exist, create it.
-$pdo->query("CREATE TABLE IF NOT EXISTS form(id SERIAL PRIMARY KEY, name TEXT, email TEXT, country TEXT, breakfast TEXT, workout TEXT, timestamp TEXT)");
-
-$set = $pdo->query("select breakfast, count(breakfast) from form group by breakfast")->fetchAll();
-
-// parse query output to create input array for canvasJS
-$data_points = [];
-foreach ($set as $res) {
-    $data_points[] = ['y'=>$res['count'], 'label'=>$res['breakfast']];
-}
-
-// sort it descending breakfasts
-usort($data_points, function ($a, $b) {
-    return $a['y'] - $b['y'];
-});
+//$pdo = new PDO('pgsql:host=localhost;port=5432;dbname=breakfast;user=postgres;password=postgres');
+//// if table 'form' does not exist, create it.
+//$pdo->query("CREATE TABLE IF NOT EXISTS form(id SERIAL PRIMARY KEY, name TEXT, email TEXT, country TEXT, breakfast TEXT, workout TEXT, timestamp TEXT)");
+//
+//$set = $pdo->query("select breakfast, count(breakfast) from form group by breakfast")->fetchAll();
+//
+//// parse query output to create input array for canvasJS
+//$data_points = [];
+//foreach ($set as $res) {
+//    $data_points[] = ['y'=>$res['count'], 'label'=>$res['breakfast']];
+//}
+//
+//// sort it descending breakfasts
+//usort($data_points, function ($a, $b) {
+//    return $a['y'] - $b['y'];
+//});
 ?>
 
 <!doctype html>
