@@ -156,6 +156,7 @@
                         <div class="tile is-child is-8">
                             <button class="button is-link" type="button" onclick="sendForm()">Submit</button>
                             <button class="button is-info" type="button" onclick="location.href ='data.php'">Look at the data...</button>
+                            <button class="button is-success" type="button" onclick="location.href ='model3d.php'">3D viewer</button>
                         </div>
                     </div>
 
