@@ -47,27 +47,26 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        camera.position.set(-10, 10, 10);
+        camera.position.set(75, 50, -50);
 
         const controls = new OrbitControls( camera, renderer.domElement );
 
-        let light_above = new THREE.DirectionalLight( 0xffffff, .2);
-        light_above.position.set(0, 100, 0);
+        let light_above = new THREE.DirectionalLight( 0xffffff, .4);
+        light_above.position.set(0, 1000, 0);
         scene.add( light_above );
 
         let light_below = new THREE.DirectionalLight( 0xffffff, .1);
-        light_below.position.set(0, -100, 0);
+        light_below.position.set(0, -1000, 0);
         scene.add( light_below );
 
         let plane;
 
-        loader.load( 'media/F22jet.obj',
+        loader.load( 'media/plane787.obj',
             function ( object ) {
                 plane = object.children[0];
                 plane.material = new THREE.MeshStandardMaterial( { color: 0x049ef4, metalness: 1, roughness: 0.4 } );
                 plane.position.set(0, 0, 0);
-                plane.rotation.set(- Math.PI / 2, 0, 0);
-                plane.scale.set(0.1, 0.1, 0.1);
+                plane.scale.set(1, 1, 1);
                 scene.add( plane );
             }, undefined,
             function ( error ) {
@@ -121,6 +120,12 @@
         }
 
         document.getElementById("yeet").addEventListener("click", onPointerDown);
+        window.addEventListener( 'resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+        );
 
         animate();
     </script>
