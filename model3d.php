@@ -1,21 +1,32 @@
 <?php
 // connect to DB
-//$pdo = new PDO('pgsql:host=localhost;port=5432;dbname=breakfast;user=postgres;password=postgres');
-//// if table 'form' does not exist, create it.
-//$pdo->query("CREATE TABLE IF NOT EXISTS form(id SERIAL PRIMARY KEY, name TEXT, email TEXT, country TEXT, breakfast TEXT, workout TEXT, timestamp TEXT)");
-//
-//$set = $pdo->query("select breakfast, count(breakfast) from form group by breakfast")->fetchAll();
-//
-//// parse query output to create input array for canvasJS
-//$data_points = [];
-//foreach ($set as $res) {
-//    $data_points[] = ['y'=>$res['count'], 'label'=>$res['breakfast']];
-//}
-//
-//// sort it descending breakfasts
-//usort($data_points, function ($a, $b) {
-//    return $a['y'] - $b['y'];
-//});
+$pdo = new PDO('pgsql:host=localhost;port=5432;dbname=breakfast;user=postgres;password=postgres');
+
+$set = $pdo->query("select aircraft_data.*, x, y, z from aircraft_data join parts_mapping on parts_mapping.side = aircraft_data.side and parts_mapping.component = aircraft_data.component")->fetchAll();
+
+// parse query output to create input array for canvasJS
+$date_points = [];
+foreach ($set as $res) {
+    $color = NULL;
+    switch ($res['anomaly'])
+    {
+        case 'Corrosão':
+            $color = 0xff0000;
+            break;
+        case 'Fratura':
+            $color = 0x0000ff;
+            break;
+        case 'Outro':
+            $color = 0x00ff00;
+            break;
+    }
+    $data_points[] = [
+            'x' => floatval($res['x']),
+            'y' => floatval($res['y']),
+            'z' => floatval($res['z']),
+            'color' => $color
+    ];
+}
 ?>
 
 <!doctype html>
@@ -76,6 +87,7 @@
 
         // Load PLANE
         let plane;
+        let speed = <?= $_GET['speed'] ?? 0 ?>; // Rotation speed from query str
         loader.load('media/plane787.obj', object => {
                 // Extract mesh from obj & set material
                 plane            = object.children[0];
@@ -89,11 +101,25 @@
         );
 
         // SPHERE
-        const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({color: 0x330000}));
+        const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({color: 0x00ffff}));
         scene.add(sphere);
 
+        let data        = <?= json_encode($data_points) ?>;
+        const dot_size  = 0.5;
+        const noise     = 0.1;  // variate sphere coords by this %
+        let varpos      = (val) => Math.random()*noise*val + val;
+        const sph_grp   = new THREE.Group();
+
+        data.forEach(point => {
+            let sphere = new THREE.Mesh(new THREE.SphereGeometry(dot_size, 32, 16), new THREE.MeshBasicMaterial({color: point.color}));
+
+            sphere.position.set(varpos(point.x), point.y, varpos(point.z));
+            sph_grp.add(sphere);
+        })
+        scene.add(sph_grp);
+
         // AXIS
-        // let axes = new THREE.AxisHelper(100);
+        // let axes = new THREE.AxesHelper(100);
         // scene.add(axes);
 
         // FOG for std background color
@@ -128,7 +154,7 @@
         // EVENT LISTENERS
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        document.getElementById("yeet").addEventListener("click", onPointerDown);
+        document.getElementById('yeet').addEventListener('dblclick', onPointerDown);
         window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -144,6 +170,10 @@
 
         function update() {
             controls.update();
+            if(plane && speed){
+                plane.rotation.y    += 0.001*speed;
+                sph_grp.rotation.y  += 0.001*speed;
+            }
         }
 
         animate();
