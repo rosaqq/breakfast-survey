@@ -37,74 +37,79 @@
         import { OrbitControls } from 'https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js';
         import { OBJLoader } from 'https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js';
 
-        const renderer = new THREE.WebGLRenderer();
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // SETUP
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        const renderer  = new THREE.WebGLRenderer();
+        const loader    = new OBJLoader();
+        const scene     = new THREE.Scene();
+        const camera    = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const controls  = new OrbitControls(camera, renderer.domElement);
+
+        // Initial configs
+        scene.add(camera);
+        camera.position.set(75, 50, -50);
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.outputEncoding = THREE.sRGBEncoding;
-        renderer.domElement.id = 'yeet';
-        document.body.appendChild( renderer.domElement );
+        renderer.domElement.id  = 'yeet';
 
-        const loader = new OBJLoader();
+        // Insert canvas in document
+        document.body.appendChild(renderer.domElement);
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        camera.position.set(75, 50, -50);
-
-        const controls = new OrbitControls( camera, renderer.domElement );
-
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // LIGHTS
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         let light_above = new THREE.DirectionalLight( 0xffffff, .4);
-        light_above.position.set(0, 1000, 0);
-        scene.add( light_above );
-
         let light_below = new THREE.DirectionalLight( 0xffffff, .1);
+        let ambient     = new THREE.AmbientLight(0x111111);
+
+        light_above.position.set(0, 1000, 0);
         light_below.position.set(0, -1000, 0);
-        scene.add( light_below );
 
+        scene.add(ambient);
+        scene.add(light_above);
+        scene.add(light_below);
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // OBJECTS
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Load PLANE
         let plane;
+        loader.load('media/plane787.obj', object => {
+                // Extract mesh from obj & set material
+                plane            = object.children[0];
+                plane.material  = new THREE.MeshStandardMaterial({color: 0x049ef4, metalness: 1, roughness: 0.4});
 
-        loader.load( 'media/plane787.obj',
-            function ( object ) {
-                plane = object.children[0];
-                plane.material = new THREE.MeshStandardMaterial( { color: 0x049ef4, metalness: 1, roughness: 0.4 } );
+                // Set initial properties & add to scene
                 plane.position.set(0, 0, 0);
                 plane.scale.set(1, 1, 1);
-                scene.add( plane );
-            }, undefined,
-            function ( error ) {
-                console.error( error );
-            }
+                scene.add(plane);
+            }, undefined, error => console.error(error)
         );
 
-        let parts = {
-            'leftwing': {
-                'root': new THREE.Vector3(),
-                'mid': new THREE.Vector3(),
-                'tip': new THREE.Vector3(),
-            },
-            'rightwing': {
-                'root': new THREE.Vector3(),
-                'mid': new THREE.Vector3(),
-                'tip': new THREE.Vector3(),
-            }
-        }
+        // SPHERE
+        const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({color: 0x330000}));
+        scene.add(sphere);
 
-        const geometry = new THREE.SphereGeometry( 1, 32, 16 );
-        const material = new THREE.MeshBasicMaterial( { color: 0x330000} );
-        const sphere = new THREE.Mesh( geometry, material );
-        scene.add( sphere );
+        // AXIS
+        // let axes = new THREE.AxisHelper(100);
+        // scene.add(axes);
 
-        function animate() {
-            requestAnimationFrame( animate );
+        // FOG for std background color
+        scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
 
-            renderer.render( scene, camera );
-        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // MOUSE INTERSECT CALCULATION
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        let rayCaster = new THREE.Raycaster();
-        let mousePosition = new THREE.Vector2();
+        let rayCaster       = new THREE.Raycaster();
+        let mousePosition   = new THREE.Vector2();
 
-        function onPointerDown( event ) {
+        function onPointerDown(event) {
             event.preventDefault();
-            mousePosition.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-            mousePosition.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mousePosition.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
             rayCaster.setFromCamera(mousePosition, camera);
             let intersects = rayCaster.intersectObjects(scene.children);
@@ -119,13 +124,27 @@
                 console.log('no intersects');
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // EVENT LISTENERS
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         document.getElementById("yeet").addEventListener("click", onPointerDown);
-        window.addEventListener( 'resize', () => {
+        window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize( window.innerWidth, window.innerHeight );
             }
         );
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            update();
+        }
+
+        function update() {
+            controls.update();
+        }
 
         animate();
     </script>
