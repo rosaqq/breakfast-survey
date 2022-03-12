@@ -28,28 +28,101 @@ usort($data_points, function ($a, $b) {
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
     <title>Breakfast Data!</title>
 </head>
-<body>
-<section class="section">
-    <div class="tile is-ancestor">
-        <div class="tile is-parent">
-            <div class="tile is-child is-2"></div>
-            <div class="tile is-child is-8">
-                <button class="button is-success" onclick="location.href='/'">
-                        <span class="icon">
-                          <i class="fas fa-arrow-left"></i>
-                        </span>
-                    <span>Back to the form</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    <div style="border: 1px solid blue; height: 500px; width: 80%; margin: 0 10%">
-        <model-viewer style="width: 100%; height: 100%;" src="F22jet.glb" camera-controls></model-viewer>
-    </div>
-</section>
+<body id="body">
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.127.0/build/three.module.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js';
+        import { OBJLoader } from 'https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js';
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.domElement.id = 'yeet';
+        document.body.appendChild( renderer.domElement );
+
+        const loader = new OBJLoader();
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        camera.position.set(-10, 10, 10);
+
+        const controls = new OrbitControls( camera, renderer.domElement );
+
+        let light_above = new THREE.DirectionalLight( 0xffffff, .2);
+        light_above.position.set(0, 100, 0);
+        scene.add( light_above );
+
+        let light_below = new THREE.DirectionalLight( 0xffffff, .1);
+        light_below.position.set(0, -100, 0);
+        scene.add( light_below );
+
+        let plane;
+
+        loader.load( 'media/F22jet.obj',
+            function ( object ) {
+                plane = object.children[0];
+                plane.material = new THREE.MeshStandardMaterial( { color: 0x049ef4, metalness: 1, roughness: 0.4 } );
+                plane.position.set(0, 0, 0);
+                plane.rotation.set(- Math.PI / 2, 0, 0);
+                plane.scale.set(0.1, 0.1, 0.1);
+                scene.add( plane );
+            }, undefined,
+            function ( error ) {
+                console.error( error );
+            }
+        );
+
+        let parts = {
+            'leftwing': {
+                'root': new THREE.Vector3(),
+                'mid': new THREE.Vector3(),
+                'tip': new THREE.Vector3(),
+            },
+            'rightwing': {
+                'root': new THREE.Vector3(),
+                'mid': new THREE.Vector3(),
+                'tip': new THREE.Vector3(),
+            }
+        }
+
+        const geometry = new THREE.SphereGeometry( 1, 32, 16 );
+        const material = new THREE.MeshBasicMaterial( { color: 0x330000} );
+        const sphere = new THREE.Mesh( geometry, material );
+        scene.add( sphere );
+
+        function animate() {
+            requestAnimationFrame( animate );
+
+            renderer.render( scene, camera );
+        }
+
+        let rayCaster = new THREE.Raycaster();
+        let mousePosition = new THREE.Vector2();
+
+        function onPointerDown( event ) {
+            event.preventDefault();
+            mousePosition.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            mousePosition.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+            rayCaster.setFromCamera(mousePosition, camera);
+            let intersects = rayCaster.intersectObjects(scene.children);
+
+            if (intersects.length)
+            {
+                let ip = intersects[0].point;
+                sphere.position.set(ip.x, ip.y, ip.z);
+                console.log(ip);
+            }
+            else
+                console.log('no intersects');
+        }
+
+        document.getElementById("yeet").addEventListener("click", onPointerDown);
+
+        animate();
+    </script>
 </body>
 </html>
