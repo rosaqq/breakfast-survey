@@ -27,14 +27,6 @@ foreach ($set as $res) {
             'color' => $color
     ];
 }
-
-$A_settings = [
-    'bg_color'      => $_GET['bg_color']    ?? 0xaaaaaa,    // Background color
-    'show_axes'     => $_GET['show_axes']   ?? 0,           // Show coordinate axes
-    'dot_size'      => $_GET['dot_size']    ?? 1,           // Action dots size
-    'dot_noise'     => $_GET['dot_noise']   ?? 1,           // Spheres will be placed randomly up to this*size of their original spot
-    'speed'         => $_GET['speed']       ?? 0,           // Auto rotate plane speed
-]
 ?>
 
 <!doctype html>
@@ -50,6 +42,9 @@ $A_settings = [
 </head>
 <body id="body">
     <script type="module">
+        // Note issues described with import to update > 0.127
+        // https://github.com/mrdoob/three.js/wiki/Migration-Guide#127--128
+
         import * as THREE from 'https://unpkg.com/three@0.127.0/build/three.module.js';
         import { OrbitControls } from 'https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js';
         import { OBJLoader } from 'https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js';
@@ -59,9 +54,17 @@ $A_settings = [
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // SETUP
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const qsettings         = <?= json_encode($A_settings) ?>;
+        const urlParams         = new URLSearchParams(window.location.search);
+        const qsettings         = {
+            'dot_noise':    urlParams.get('dot_noise')   ?? 1,           // Spheres will be placed randomly up to this*diameter of their original spot
+            // Live update
+            'dot_size':     urlParams.get('dot_size')    ?? 1,           // Action dots size
+            'speed':        urlParams.get('speed')       ?? 0,           // Auto rotate plane speed
+            'bg_color':     urlParams.get('bg_color')    ?? 0xaaaaaa,    // Background color
+            'show_axes':    urlParams.get('show_axes')   ?? 0,           // Show coordinate axes
+        }
         const loader            = new OBJLoader();
-        const gui               = new GUI();
+        const gui               = new GUI({title: 'Settings'});
 
         // Renderer
         const renderer          = new THREE.WebGLRenderer({ antialias: true });
@@ -77,13 +80,18 @@ $A_settings = [
         camera.position.set(75, 50, -50);
 
         // Orbit controls
-        const orbit = new OrbitControls( camera, renderer.domElement );
+        const controls          = new OrbitControls( camera, renderer.domElement );
 
         // Scene configs
         const scene             = new THREE.Scene();
         scene.background        = new THREE.Color(qsettings.bg_color);
         scene.environment       = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+        const axes              = new THREE.AxesHelper(100);
+        axes.visible            = false;
+
         scene.add(camera);
+        scene.add(axes);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // LIGHTS
@@ -93,20 +101,12 @@ $A_settings = [
         scene.add(ambient);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // GUI
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        function guiMeshStandardMaterial(gui, material) {
-            gui.add(material,'wireframe');
-            gui.add(qsettings,'speed', 0, 10).listen();
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // OBJECTS
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Group to hold all objects for coordinated rotation
-        const plane_grp   = new THREE.Group();
+        const plane_grp     = new THREE.Group();    // All that rotates in sync with the plane
+        const points_grp    = new THREE.Group();    // Data points for easy iteration to resize / re-distribute
 
         // Load PLANE
         let plane;
@@ -127,33 +127,53 @@ $A_settings = [
 
         // Mouse click Sphere
         const sphere = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({color: 0xffff00}));
-        plane_grp.add(sphere);
+        scene.add(sphere);
 
         // Action points
         let data        = <?= json_encode($data_points) ?>;
         const dot_size  = qsettings.dot_size;
-        const noise     = qsettings.dot_noise;
 
         // positions are randomized to fall within up to <noise>% of the sphere's diameter
-        let varpos      = (x, y) => {
+        let varpos      = (x, y, noise) => {
             let r = noise*dot_size*2 * Math.sqrt(Math.random());
             let a = Math.random() * 2 * Math.PI;
             return [x + r * Math.cos(a), y + r * Math.sin(a)];
         }
 
         data.forEach(point => {
-            let sphere  = new THREE.Mesh(new THREE.SphereGeometry(dot_size, 32, 16), new THREE.MeshBasicMaterial({color: point.color}));
-            let [x, z]  = varpos(point.x, point.z);
+            let sphere  = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshBasicMaterial({color: point.color}));
+            let [x, z]  = varpos(point.x, point.z,qsettings.dot_noise);
 
+            sphere.scale.set(dot_size, dot_size, dot_size);
             sphere.position.set(x, point.y, z);
-            plane_grp.add(sphere);
+            points_grp.add(sphere);
         })
 
+        plane_grp.add(points_grp);
         scene.add(plane_grp);
 
-        // AXIS
-        if (qsettings.show_axes)
-            scene.add(new THREE.AxesHelper(100));
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // GUI
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        const scene_gui     = gui.addFolder('Scene');
+        const points_gui    = gui.addFolder('Data points');
+
+        scene_gui.addColor(qsettings, 'bg_color')
+            .onChange(value => {scene.background = new THREE.Color(value);})
+            .name('Background color');
+        scene_gui.add(axes, 'visible')
+            .name('Show axes');
+
+        points_gui.add(qsettings, 'dot_size', 0, 5)
+            .onChange(value => {points_grp.children.forEach(dot => {dot.scale.set(value, value, value)})})
+            .name('Dot size');
+
+        function guiMeshStandardMaterial(gui, material) {
+            const plane_gui = gui.addFolder('Plane model');
+            plane_gui.add(material,'wireframe').name('Wireframe');
+            plane_gui.add(qsettings,'speed', 0, 10).name('Rotation speed').listen();
+        }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // MOUSE INTERSECT CALCULATION
@@ -199,7 +219,9 @@ $A_settings = [
         function update() {
             controls.update();
             if(plane && qsettings.speed){
-                plane_grp.rotation.y += 0.001*qsettings.speed;
+                let rotation_increment  = 0.001*qsettings.speed;
+                plane_grp.rotation.y    = (plane_grp.rotation.y + rotation_increment) % (2*Math.PI);
+                sphere.position.applyAxisAngle(new THREE.Vector3(0,1,0), rotation_increment);
             }
         }
 
