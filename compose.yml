@@ -28,7 +28,8 @@ services:
       POSTGRES_USER: bkfast
       POSTGRES_PASSWORD: bekfast
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/db
+      - ./db/init:/docker-entrypoint-initdb.d:Z
     ports:
       - "5432:5432"
 
@@ -38,7 +39,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./db_backups:/backups:Z
+      - ./db/backups:/backups:Z
     entrypoint: >
       sh -c "
       apk add --no-cache postgresql-client &&
