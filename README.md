@@ -4,7 +4,7 @@
 ![uptime](https://img.shields.io/uptimerobot/ratio/m788675576-ab91f32ea57c23f2833351a2)
 
 
-### Hosted at -> [breakfast.lnav.pt](https://breakfast.sknv.net/)
+### Hosted at -> [breakfast.lnav.pt](https://breakfast.lnav.pt/)
 
 PHP based website to collect breakfast information and store it in a PostgreSQL DB.  
 Data visualization with [CanvasJS](https://canvasjs.com/).  
