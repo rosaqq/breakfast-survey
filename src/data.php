@@ -1,6 +1,6 @@
 <?php
     // connect to DB
-    $pdo = new PDO('pgsql:host=localhost;port=5432;dbname=breakfast;user=postgres;password=postgres');
+    $pdo = new PDO('pgsql:host=db;port=5432;dbname=db;user=bkfast;password=bekfast');
     // if table 'form' does not exist, create it.
     $pdo->query("CREATE TABLE IF NOT EXISTS form(id SERIAL PRIMARY KEY, name TEXT, email TEXT, country TEXT, breakfast TEXT, workout TEXT, timestamp TEXT)");
 
